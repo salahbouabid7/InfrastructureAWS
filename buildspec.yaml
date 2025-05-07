@@ -12,6 +12,7 @@ phases:
     commands:
     # Initialisation of terraform 
       - echo "Terraform init in the process"
+      - cd "Terraform-project/"
       - terraform init
   build:
     commands:
