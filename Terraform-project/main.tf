@@ -41,6 +41,12 @@ data "aws_vpc" "AWSvpc" {
     values = [local.vpc_id]
   }
 }
+data "aws_internet_gateway" "default" {
+  filter {
+    name   = "internet-gateway-id"
+    values = [var.internetgateway]
+  }
+}
 
 module "autoscaling" {
   source           = "terraform-aws-modules/autoscaling/aws"
@@ -99,11 +105,11 @@ resource "aws_subnet" "subnets" {
   cidr_block        = each.value.cidr_block
   availability_zone = "eu-north-1b"
 
-
   tags = {
     Name = each.value.subnet_name
   }
 }
+
 resource "aws_route_table" "webapp-routetable" {
   vpc_id = local.vpc_id
   route {
@@ -112,16 +118,51 @@ resource "aws_route_table" "webapp-routetable" {
   }
 
 }
+
 resource "aws_route" "webapp-route" {
   route_table_id         = aws_route_table.webapp-routetable.id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = "empty for now"
+  gateway_id             = data.aws_internet_gateway.default.id
 }
+#####
+resource "aws_route_table" "nat-routetable" {
+  vpc_id = local.vpc_id
+  route {
+    cidr_block = "10.0.0.0/16"
+    gateway_id = "local"
+  }
+
+}
+
+resource "aws_route" "nat-route" {
+  route_table_id         = aws_route_table.nat-routetable.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_nat_gateway.awsnatgateway.id
+}
+
+resource "aws_nat_gateway" "awsnatgateway" {
+  allocation_id = aws_eip.publicip.id
+  subnet_id     = aws_subnet.subnets["public-subnet-nat"].id
+  tags = {
+    Name = "gw NAT"
+  }
+
+  depends_on = [data.aws_internet_gateway.default]
+}
+resource "aws_route_table_association" "b" {
+  subnet_id      = aws_subnet.subnets["public-subnet-nat"].id
+  route_table_id = aws_route_table.nat-routetable.id
+}
+resource "aws_eip" "publicip" {
+  depends_on                = [data.aws_internet_gateway.default]
+}
+######
 resource "aws_route_table_association" "a" {
   count = length(local.public_subnet_ids)
   subnet_id      = local.public_subnet_ids[count.index]
   route_table_id = aws_route_table.webapp-routetable.id
 }
+
 resource "aws_security_group" "rds-to-asg" {
   name        = "rds-to-asg"
   vpc_id      = local.vpc_id
