@@ -1,0 +1,3 @@
+
+[Web-server]
+asg_instance ansible_connection=ssh ansible_user=ubuntu   ansible_host:

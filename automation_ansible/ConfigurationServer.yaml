@@ -1,0 +1,29 @@
+---
+hosts:
+become: true
+gather_facts: false
+tasks:
+
+- name: Update the repository
+  apt:
+    update: true
+
+- name: Install Dcoker and Docker-Compose
+  apt:
+    name:
+    - docker.io
+    - Docker-Compose
+    - git
+    state: latest
+
+- name: clone the web application build
+  git:
+    clone: true
+    repo: https://github.com/salahbouabid7/PFEWebAppli.git
+    dest: /webappli
+
+- name: Start the Docker compose that will start both backend and frontend
+  community.docker.docker_compose_v2_run:
+    name: webappli-crate
+    build: yes
+    project_src: /webappli/
