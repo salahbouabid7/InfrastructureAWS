@@ -3,7 +3,8 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 8.6.0"
+      version = ">= 8.3.0"
+
     }
   }
 }
@@ -18,7 +19,7 @@ locals {
 }
 data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical's AWS account ID
+  owners      = ["099720109477"]
 
   filter {
     name   = "name"
@@ -95,7 +96,13 @@ module "autoscaling" {
   ]
   security_groups  = [aws_security_group.asg_to_rds.id]
   default_cooldown = 600
-  target_group_arns = [module.alb.target_groups["asg_group"].arn]
+  traffic_source_attachments = {
+    asg-alb = {
+      identifier = module.alb.target_group["asg_group"].arn
+      type = "elbv2"
+    }
+  }
+
 
 }
 
