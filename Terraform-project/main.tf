@@ -67,7 +67,7 @@ module "autoscaling" {
   image_id                    = data.aws_ami.ubuntu.image_id
   instance_type               = "t3.micro"
   termination_policies        = ["ClosestToNextInstanceHour", "Default"]
-  vpc_zone_identifier         = aws_subnet.webapp-subnet.id
+  vpc_zone_identifier         = aws_subnet.subnets["private-subnet-web"].id
   scaling_policies = [
     {
       name                = "scale-out"
@@ -110,7 +110,7 @@ module "autoscaling" {
 
 }
  ## Génerating Keys (Private/Public) that will be used later on ansible for configuration
- resource "aws_key_pair" "Public-key"{
+ resource "aws_key_pair" "public-key"{
   key_name = local.publickeyinstance
   public_key = tls_private_key.keyforasg.public_key_openssh
     provisioner "local-exec" {

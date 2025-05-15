@@ -1,4 +1,3 @@
-name_asg = "webserver"
 
 subnet_definitions = {
   "public-subnet-alb" = {
@@ -14,4 +13,5 @@ subnet_definitions = {
         cidr_block= "10.10.8.0/24"
   }
 }
-internetgateway = "igw-0f0e8a5a5950a0846"
+internetgateway = "my-internet-gg"
+
