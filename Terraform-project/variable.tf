@@ -7,3 +7,4 @@ variable "subnet_definitions" {
   }))
   description = "Map of subnet definitions"
 }
+ 

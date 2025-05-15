@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 8.6.0"
     }
+    tls = {
+      source = "hashicorp/tls"
+      version = "4.1.0"
+    }
   }
 }
 locals {
@@ -14,7 +18,7 @@ locals {
     subnet.id
     if strcontains(subnet.tags["Name"], "public-subnet")
   ]
-
+  publickeyinstance="asgkey"
 }
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -96,7 +100,21 @@ module "autoscaling" {
   security_groups  = [aws_security_group.asg_to_rds.id]
   default_cooldown = 600
   target_group_arns = [module.alb.target_groups["asg_group"].arn]
+  key_name          = local.publickeyinstance
 
+}
+ ## Génerating Keys (Private/Public) that will be used later on ansible for configuration
+ resource "aws_key_pair" "Public-key"{
+  key_name = local.publickeyinstance
+  public_key = tls_private_key.keyforasg.public_key_openssh
+    provisioner "local-exec" {
+    working_dir = "../automation_ansible/"
+    command = "sed -i 's/TOBEREMPLACED/${tls_private_key.keyforasg.private_key_openssh}/g' >> ../automation_ansible/instance-asg"
+  }
+ }
+
+ resource "tls_private_key" "keyforasg" {
+  algorithm = "RSA"
 }
 
 resource "aws_subnet" "subnets" {
