@@ -15,7 +15,7 @@ locals {
     subnet.id
     if strcontains(subnet.tags["Name"], "public-subnet")
   ]
-
+  publickeyinstance="asgkey"
 }
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -96,13 +96,7 @@ module "autoscaling" {
   ]
   security_groups  = [aws_security_group.asg_to_rds.id]
   default_cooldown = 600
-  traffic_source_attachments = {
-    asg-alb = {
-      identifier = module.alb.target_group["asg_group"].arn
-      type = "elbv2"
-    }
-  }
-
+  target_group_arns = [module.alb.target_groups["asg_group"].arn]
 
 }
 
