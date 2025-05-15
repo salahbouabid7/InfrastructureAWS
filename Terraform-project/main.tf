@@ -6,6 +6,10 @@ terraform {
       version = ">= 8.3.0"
 
     }
+    tls = {
+      source = "hashicorp/tls"
+      version = "4.1.0"
+    }
   }
 }
 locals {
@@ -44,7 +48,7 @@ data "aws_vpc" "AWSvpc" {
 }
 data "aws_internet_gateway" "default" {
   filter {
-    name   = "internet-gateway-id"
+    name   = "Name"
     values = [var.internetgateway]
   }
 }
@@ -102,7 +106,21 @@ module "autoscaling" {
       type = "elbv2"
     }
   }
+  key_name          = local.publickeyinstance
 
+}
+ ## Génerating Keys (Private/Public) that will be used later on ansible for configuration
+ resource "aws_key_pair" "Public-key"{
+  key_name = local.publickeyinstance
+  public_key = tls_private_key.keyforasg.public_key_openssh
+    provisioner "local-exec" {
+    working_dir = "../automation_ansible/"
+    command = "sed -i 's/TOBEREMPLACED/${tls_private_key.keyforasg.private_key_openssh}/g' >> ../automation_ansible/instance-asg"
+  }
+ }
+
+ resource "tls_private_key" "keyforasg" {
+  algorithm = "RSA"
 }
 
 resource "aws_subnet" "subnets" {
