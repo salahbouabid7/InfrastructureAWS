@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 8.3.0"
+      version = "6.0.0-beta1"
 
     }
     tls = {
@@ -98,11 +98,11 @@ module "autoscaling" {
       comparison_operator = "LessThanThreshold"
     }
   ]
-  security_groups  = [aws_security_group.asg_to_rds.id]
+  security_groups  = [aws_security_group.asg-to-rds.id]
   default_cooldown = 600
   traffic_source_attachments = {
     asg-alb = {
-      identifier = module.alb.target_group["asg_group"].arn
+      identifier = module.alb.target_groups["asg_group"].arn
       type = "elbv2"
     }
   }
@@ -213,7 +213,7 @@ resource "aws_vpc_security_group_ingress_rule" "rdstoasg_ingress" {
   from_port                    = 3306
   ip_protocol                  = "tcp"
   to_port                      = 3306
-  referenced_security_group_id = aws_security_group.asg_to_rds.id
+  referenced_security_group_id = aws_security_group.asg-to-rds.id
   description                  = "Allow inbound DB traffic from EC2/ASG on port 3306"
 
 }
