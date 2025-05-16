@@ -115,7 +115,7 @@ module "autoscaling" {
   public_key = tls_private_key.keyforasg.public_key_openssh
     provisioner "local-exec" {
     working_dir = "../automation_ansible/"
-    command = "sed -i 's/TOBEREMPLACED/${tls_private_key.keyforasg.private_key_openssh}/g' >> ../automation_ansible/instance-asg"
+    command = "sed -i "s/TOBEREMPLACED/${tls_private_key.keyforasg.private_key_openssh}/g"  ../automation_ansible/instance-asg"
   }
  }
 
@@ -246,6 +246,20 @@ module "alb" {
     allow_https = {
       from_port   = 443
       to_port     = 443
+      ip_protocol = "tcp"
+      description = "HTTPS web traffic"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+    allow_frontend = {
+      from_port   = 3000
+      to_port     = 3000
+      ip_protocol = "tcp"
+      description = "HTTPS web traffic"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+    allow_backend = {
+      from_port   = 8000
+      to_port     = 8000
       ip_protocol = "tcp"
       description = "HTTPS web traffic"
       cidr_ipv4   = "0.0.0.0/0"
