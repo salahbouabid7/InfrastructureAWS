@@ -4,7 +4,6 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "6.0.0-beta1"
-
     }
     tls = {
       source = "hashicorp/tls"
@@ -12,6 +11,13 @@ terraform {
     }
   }
 }
+
+provider "aws" {
+ region="eu-north-1"
+ access_key = "AKIA3FLDYFT3ZD36P3VP"
+ secret_key = "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"
+}
+
 locals {
   vpc_id = "vpc-09b443006b8470e8b"
   public_subnet_ids = [
@@ -115,7 +121,9 @@ module "autoscaling" {
   public_key = tls_private_key.keyforasg.public_key_openssh
     provisioner "local-exec" {
     working_dir = "../automation_ansible/"
-    command = "sed -i "s/TOBEREMPLACED/${tls_private_key.keyforasg.private_key_openssh}/g"  ../automation_ansible/instance-asg"
+    command = <<SALAH
+	sed -i "s/TOBEREMPLACED/${tls_private_key.keyforasg.private_key_openssh}/g"  ../automation_ansible/instance-asg
+	SALAH
   }
  }
 
