@@ -254,14 +254,14 @@ module "alb" {
       from_port   = 3000
       to_port     = 3000
       ip_protocol = "tcp"
-      description = "HTTPS web traffic"
+      description = "Allow external access to frontend app"
       cidr_ipv4   = "0.0.0.0/0"
     }
     allow_backend = {
       from_port   = 8000
       to_port     = 8000
       ip_protocol = "tcp"
-      description = "HTTPS web traffic"
+      description = "Allow external access to backend"
       cidr_ipv4   = "0.0.0.0/0"
     }
   }
