@@ -48,13 +48,13 @@ data "aws_ami" "ubuntu" {
 }
 data "aws_vpc" "AWSvpc" {
   filter {
-    name   = "id"
+    name   = "vpc-id"
     values = [local.vpc_id]
   }
 }
 data "aws_internet_gateway" "default" {
   filter {
-    name   = "Name"
+    name   = "tag:Name"
     values = [var.internetgateway]
   }
 }
@@ -73,7 +73,7 @@ module "autoscaling" {
   image_id                    = data.aws_ami.ubuntu.image_id
   instance_type               = "t3.micro"
   termination_policies        = ["ClosestToNextInstanceHour", "Default"]
-  vpc_zone_identifier         = aws_subnet.subnets["private-subnet-web"].id
+  vpc_zone_identifier         = [aws_subnet.subnets["private-subnet-web"].id]
   scaling_policies = [
     {
       name                = "scale-out"
@@ -108,7 +108,7 @@ module "autoscaling" {
   default_cooldown = 600
   traffic_source_attachments = {
     asg-alb = {
-      identifier = module.alb.target_groups["asg_group"].arn
+      traffic_source_identifier = module.alb.target_groups["asg_group"].arn
       type = "elbv2"
     }
   }
@@ -217,7 +217,7 @@ resource "aws_security_group" "asg-to-rds" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "rdstoasg_ingress" {
-  security_group_id            = aws_security_group.rds-to-asg
+  security_group_id            = aws_security_group.rds-to-asg.id
   from_port                    = 3306
   ip_protocol                  = "tcp"
   to_port                      = 3306
@@ -227,7 +227,7 @@ resource "aws_vpc_security_group_ingress_rule" "rdstoasg_ingress" {
 }
 
 resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
-  security_group_id            = aws_security_group.asg-to-rds
+  security_group_id            = aws_security_group.asg-to-rds.id
   from_port                    = 3306
   ip_protocol                  = "tcp"
   to_port                      = 3306
@@ -238,11 +238,12 @@ resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
 module "alb" {
 
   source             = "terraform-aws-modules/alb/aws"
-  name               = "alb_for_asg"
+  name               = "alb-for-asg"
   vpc_id             = local.vpc_id
   subnets            = [aws_subnet.subnets["public-subnet-alb"].id]
   load_balancer_type = "application"
   internal           = false
+  
   security_group_ingress_rules = {
     allow_http = {
       from_port   = 80
@@ -273,6 +274,7 @@ module "alb" {
       cidr_ipv4   = "0.0.0.0/0"
     }
   }
+  
   security_group_egress_rules = {
     all = {
       ip_protocol = "-1"
@@ -282,12 +284,13 @@ module "alb" {
 
   target_groups = {
     asg_group = {
-      name_prefix = "asg_targetgroup"
+      name_prefix = "asg-tg"
       target_type = "instance"
       port        = 80
       protocol    = "TCP"
     }
   }
+
   listeners = {
     tcp80 = {
       port     = 80
@@ -304,4 +307,5 @@ module "alb" {
       }
     }
   }
+
 }
