@@ -60,8 +60,7 @@ data "aws_internet_gateway" "default" {
 }
 
 module "autoscaling" {
-  source           = "terraform-aws-modules/autoscaling/aws"
-  version          = "8.3.0"
+  source           = "./ASG"
   name             = "webapp-asg"
   min_size         = 1
   max_size         = 3
@@ -142,11 +141,20 @@ resource "aws_subnet" "subnets" {
   }
 }
 
+resource "aws_subnet" "alb-second" {
+  vpc_id            = local.vpc_id
+  cidr_block        = "10.10.9.0/24"
+  availability_zone = "eu-north-1a"
+
+  tags = {
+    Name = "alb-subnet-eu-north-1a"
+  }
+}
+
 resource "aws_route_table" "webapp-routetable" {
   vpc_id = local.vpc_id
-  route {
-    cidr_block = "10.0.0.0/16"
-    gateway_id = "local"
+tags = {
+    Name = "webapp-routetable"
   }
 
 }
@@ -159,11 +167,9 @@ resource "aws_route" "webapp-route" {
 #####
 resource "aws_route_table" "nat-routetable" {
   vpc_id = local.vpc_id
-  route {
-    cidr_block = "10.0.0.0/16"
-    gateway_id = "local"
+  tags = {
+    Name = "nat-routetable"
   }
-
 }
 
 resource "aws_route" "nat-route" {
@@ -182,7 +188,11 @@ resource "aws_nat_gateway" "awsnatgateway" {
   depends_on = [data.aws_internet_gateway.default]
 }
 resource "aws_route_table_association" "b" {
-  subnet_id      = aws_subnet.subnets["public-subnet-nat"].id
+  subnet_id      = aws_subnet.subnets["private-subnet-web"].id
+  route_table_id = aws_route_table.nat-routetable.id
+}
+resource "aws_route_table_association" "alb-b" {
+  subnet_id = aws_subnet.alb-second.id
   route_table_id = aws_route_table.nat-routetable.id
 }
 resource "aws_eip" "publicip" {
@@ -237,13 +247,13 @@ resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
 }
 module "alb" {
 
-  source             = "terraform-aws-modules/alb/aws"
+  source             = "./ALB"
   name               = "alb-for-asg"
   vpc_id             = local.vpc_id
-  subnets            = [aws_subnet.subnets["public-subnet-alb"].id]
+  subnets            = [aws_subnet.subnets["public-subnet-alb"].id, aws_subnet.alb-second.id]
   load_balancer_type = "application"
   internal           = false
-  
+  enable_deletion_protection = false
   security_group_ingress_rules = {
     allow_http = {
       from_port   = 80
@@ -252,13 +262,7 @@ module "alb" {
       description = "HTTP web traffic"
       cidr_ipv4   = "0.0.0.0/0"
     }
-    allow_https = {
-      from_port   = 443
-      to_port     = 443
-      ip_protocol = "tcp"
-      description = "HTTPS web traffic"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
+
     allow_frontend = {
       from_port   = 3000
       to_port     = 3000
@@ -287,21 +291,14 @@ module "alb" {
       name_prefix = "asg-tg"
       target_type = "instance"
       port        = 80
-      protocol    = "TCP"
+      protocol    = "HTTP"
     }
   }
 
   listeners = {
     tcp80 = {
       port     = 80
-      protocol = "TCP"
-      forward = {
-        target_group_key = "asg_group"
-      }
-    }
-    tcp443 = {
-      port     = 443
-      protocol = "TCP"
+      protocol = "HTTP"
       forward = {
         target_group_key = "asg_group"
       }
