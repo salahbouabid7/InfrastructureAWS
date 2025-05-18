@@ -61,11 +61,11 @@ data "aws_internet_gateway" "default" {
     values = [var.internetgateway]
   }
 }
-data "aws_instances" "instanceASG"{
+data "aws_instances" "instanceASG" {
   instance_tags = {
-    Name = "ASG-instance"}
-    depends_on = [module.autoscaling]
-  }
+  Name = "ASG-instance" }
+  depends_on = [module.autoscaling]
+}
 
 # END #
 
@@ -133,10 +133,10 @@ module "autoscaling" {
 resource "null_resource" "this" {
   provisioner "local-exec" {
     working_dir = "../automation_ansible"
-    command = "sed -i \"s/TOBEREMPLACED/${data.aws_instances.instanceASG.private_ips[0]}\"  ./instance-asg"
+    command     = "sed -i \"s/TOBEREMPLACED/${data.aws_instances.instanceASG.private_ips[0]}\"  ./instance-asg"
   }
   depends_on = [data.aws_instances.instanceASG]
-} 
+}
 
 
 ## Génerating Keys (Private/Public) that will be used later on ansible for configuration ##
