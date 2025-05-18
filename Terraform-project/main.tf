@@ -225,7 +225,7 @@ resource "aws_security_group" "asg-to-rds" {
 
 
   tags = {
-    Name = "allow_tls"
+    Name = "allow_ASGtoRDS"
   }
 }
 
