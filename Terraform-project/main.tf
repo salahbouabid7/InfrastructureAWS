@@ -27,6 +27,9 @@ locals {
   ]
   publickeyinstance="asgkey"
 }
+# END #
+
+# Retrieving DATA FROM AWS #
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"]
@@ -58,6 +61,8 @@ data "aws_internet_gateway" "default" {
     values = [var.internetgateway]
   }
 }
+# END #
+
 # Auto Scaling Group Module #
 module "autoscaling" {
   source           = "./ASG"
@@ -237,7 +242,7 @@ resource "aws_security_group" "asg-to-rds" {
 
 
   tags = {
-    Name = "allow_ASGtoRDS"
+    Name = "allow_tls"
   }
 }
 
@@ -340,4 +345,5 @@ module "alb" {
   }
 
 }
-# END
+#
+# END #
