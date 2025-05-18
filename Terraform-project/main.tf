@@ -6,16 +6,16 @@ terraform {
       version = "6.0.0-beta1"
     }
     tls = {
-      source = "hashicorp/tls"
+      source  = "hashicorp/tls"
       version = "4.1.0"
     }
   }
 }
 
 provider "aws" {
- region="eu-north-1"
- access_key = "AKIA3FLDYFT3ZD36P3VP"
- secret_key = "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"
+  region     = "eu-north-1"
+  access_key = "AKIA3FLDYFT3ZD36P3VP"
+  secret_key = "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"
 }
 
 locals {
@@ -25,7 +25,7 @@ locals {
     subnet.id
     if strcontains(subnet.tags["Name"], "public-subnet")
   ]
-  publickeyinstance="asgkey"
+  publickeyinstance = "asgkey"
 }
 # END #
 
@@ -61,6 +61,12 @@ data "aws_internet_gateway" "default" {
     values = [var.internetgateway]
   }
 }
+data "aws_instances" "instanceASG"{
+  instance_tags = {
+    Name = "ASG-instance"}
+    depends_on = [module.autoscaling]
+  }
+
 # END #
 
 # Auto Scaling Group Module #
@@ -113,13 +119,24 @@ module "autoscaling" {
   traffic_source_attachments = {
     asg-alb = {
       traffic_source_identifier = module.alb.target_groups["asg_group"].arn
-      type = "elbv2"
+      type                      = "elbv2"
     }
   }
-  key_name          = local.publickeyinstance
+  launch_template_tags = {
+    Name = "ASG-instance"
+  }
+  key_name = local.publickeyinstance
 
 }
 # END #
+## Parssing the private ip of the instance into inventory file of ansible ##
+resource "null_resource" "this" {
+  provisioner "local-exec" {
+    working_dir = "../automation_ansible"
+    command = "sed -i \"s/TOBEREMPLACED/${data.aws_instances.instanceASG.private_ips[0]}\"  ./instance-asg"
+  }
+  depends_on = [data.aws_instances.instanceASG]
+} 
 
 
 ## Génerating Keys (Private/Public) that will be used later on ansible for configuration ##
@@ -129,7 +146,7 @@ resource "aws_key_pair" "public-key" {
 
   provisioner "local-exec" {
     working_dir = "../automation_ansible/"
-    command = <<SALAH
+    command     = <<SALAH
 cat <<EOF > private_key.pem
 ${tls_private_key.keyforasg.private_key_openssh}
 EOF
@@ -137,7 +154,7 @@ chmod 600 private_key.pem
 SALAH
   }
 }
- resource "tls_private_key" "keyforasg" {
+resource "tls_private_key" "keyforasg" {
   algorithm = "RSA"
 }
 ############## END OF RESSOURCE RELATED TO PRIVATE/PUBLIC KEY ##
@@ -164,10 +181,10 @@ resource "aws_subnet" "alb-second" {
     Name = "alb-subnet-eu-north-1a"
   }
 }
-  ## creating  table route ##
+## creating  table route ##
 resource "aws_route_table" "webapp-routetable" {
   vpc_id = local.vpc_id
-tags = {
+  tags = {
     Name = "webapp-routetable"
   }
 }
@@ -190,18 +207,18 @@ resource "aws_route" "nat-route" {
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_nat_gateway.awsnatgateway.id
 }
- 
- ### ASSOCIATING TABLE ROUTE WITH SUBNET ###
- resource "aws_route_table_association" "b" {
+
+### ASSOCIATING TABLE ROUTE WITH SUBNET ###
+resource "aws_route_table_association" "b" {
   subnet_id      = aws_subnet.subnets["private-subnet-web"].id
   route_table_id = aws_route_table.nat-routetable.id
 }
 resource "aws_route_table_association" "alb-b" {
-  subnet_id = aws_subnet.alb-second.id
+  subnet_id      = aws_subnet.alb-second.id
   route_table_id = aws_route_table.nat-routetable.id
 }
 resource "aws_route_table_association" "a" {
-  count = length(local.public_subnet_ids)
+  count          = length(local.public_subnet_ids)
   subnet_id      = local.public_subnet_ids[count.index]
   route_table_id = aws_route_table.webapp-routetable.id
 }
@@ -219,7 +236,7 @@ resource "aws_nat_gateway" "awsnatgateway" {
   depends_on = [data.aws_internet_gateway.default]
 }
 resource "aws_eip" "publicip" {
-  depends_on                = [data.aws_internet_gateway.default]
+  depends_on = [data.aws_internet_gateway.default]
 }
 ## END ##
 #END#
@@ -271,12 +288,12 @@ resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
 # Creating LOAD BALANCR #
 module "alb" {
 
-  source             = "./ALB"
-  name               = "alb-for-asg"
-  vpc_id             = local.vpc_id
-  subnets            = [aws_subnet.subnets["public-subnet-alb"].id, aws_subnet.alb-second.id]
-  load_balancer_type = "application"
-  internal           = false
+  source                     = "./ALB"
+  name                       = "alb-for-asg"
+  vpc_id                     = local.vpc_id
+  subnets                    = [aws_subnet.subnets["public-subnet-alb"].id, aws_subnet.alb-second.id]
+  load_balancer_type         = "application"
+  internal                   = false
   enable_deletion_protection = false
   security_group_ingress_rules = {
     allow_http = {
@@ -302,7 +319,7 @@ module "alb" {
       cidr_ipv4   = "0.0.0.0/0"
     }
   }
-  
+
   security_group_egress_rules = {
     all = {
       ip_protocol = "-1"
@@ -327,14 +344,14 @@ module "alb" {
         target_group_key = "asg_group"
       }
     }
-        tcp3000 = {
+    tcp3000 = {
       port     = 3000
       protocol = "HTTP"
       forward = {
         target_group_key = "asg_group"
       }
     }
-        tcp8000 = {
+    tcp8000 = {
       port     = 8000
       protocol = "HTTP"
       forward = {
