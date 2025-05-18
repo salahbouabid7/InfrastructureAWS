@@ -115,17 +115,20 @@ module "autoscaling" {
 
 }
  ## Génerating Keys (Private/Public) that will be used later on ansible for configuration
- resource "aws_key_pair" "public-key"{
-  key_name = local.publickeyinstance
+resource "aws_key_pair" "public-key" {
+  key_name   = local.publickeyinstance
   public_key = tls_private_key.keyforasg.public_key_openssh
-    provisioner "local-exec" {
+
+  provisioner "local-exec" {
     working_dir = "../automation_ansible/"
     command = <<SALAH
-	sed -i "s/TOBEREMPLACED/${tls_private_key.keyforasg.private_key_openssh}/g"  ../automation_ansible/instance-asg
-	SALAH
+cat <<EOF > private_key.pem
+${tls_private_key.keyforasg.private_key_openssh}
+EOF
+chmod 600 private_key.pem
+SALAH
   }
- }
-
+}
  resource "tls_private_key" "keyforasg" {
   algorithm = "RSA"
 }
