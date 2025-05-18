@@ -58,7 +58,7 @@ data "aws_internet_gateway" "default" {
     values = [var.internetgateway]
   }
 }
-
+# Auto Scaling Group Module #
 module "autoscaling" {
   source           = "./ASG"
   name             = "webapp-asg"
@@ -114,7 +114,10 @@ module "autoscaling" {
   key_name          = local.publickeyinstance
 
 }
- ## Génerating Keys (Private/Public) that will be used later on ansible for configuration
+# END #
+
+
+## Génerating Keys (Private/Public) that will be used later on ansible for configuration ##
 resource "aws_key_pair" "public-key" {
   key_name   = local.publickeyinstance
   public_key = tls_private_key.keyforasg.public_key_openssh
@@ -132,7 +135,10 @@ SALAH
  resource "tls_private_key" "keyforasg" {
   algorithm = "RSA"
 }
+############## END OF RESSOURCE RELATED TO PRIVATE/PUBLIC KEY ##
 
+
+# Creating ressource related to VPC #
 resource "aws_subnet" "subnets" {
   vpc_id            = local.vpc_id
   for_each          = var.subnet_definitions
@@ -153,13 +159,12 @@ resource "aws_subnet" "alb-second" {
     Name = "alb-subnet-eu-north-1a"
   }
 }
-
+  ## creating  table route ##
 resource "aws_route_table" "webapp-routetable" {
   vpc_id = local.vpc_id
 tags = {
     Name = "webapp-routetable"
   }
-
 }
 
 resource "aws_route" "webapp-route" {
@@ -167,7 +172,7 @@ resource "aws_route" "webapp-route" {
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = data.aws_internet_gateway.default.id
 }
-#####
+
 resource "aws_route_table" "nat-routetable" {
   vpc_id = local.vpc_id
   tags = {
@@ -180,7 +185,25 @@ resource "aws_route" "nat-route" {
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_nat_gateway.awsnatgateway.id
 }
+ 
+ ### ASSOCIATING TABLE ROUTE WITH SUBNET ###
+ resource "aws_route_table_association" "b" {
+  subnet_id      = aws_subnet.subnets["private-subnet-web"].id
+  route_table_id = aws_route_table.nat-routetable.id
+}
+resource "aws_route_table_association" "alb-b" {
+  subnet_id = aws_subnet.alb-second.id
+  route_table_id = aws_route_table.nat-routetable.id
+}
+resource "aws_route_table_association" "a" {
+  count = length(local.public_subnet_ids)
+  subnet_id      = local.public_subnet_ids[count.index]
+  route_table_id = aws_route_table.webapp-routetable.id
+}
+### END ###
+## END ##
 
+## Creating NAT GATEWAY AND ELASTIC IP ##
 resource "aws_nat_gateway" "awsnatgateway" {
   allocation_id = aws_eip.publicip.id
   subnet_id     = aws_subnet.subnets["public-subnet-nat"].id
@@ -190,24 +213,13 @@ resource "aws_nat_gateway" "awsnatgateway" {
 
   depends_on = [data.aws_internet_gateway.default]
 }
-resource "aws_route_table_association" "b" {
-  subnet_id      = aws_subnet.subnets["private-subnet-web"].id
-  route_table_id = aws_route_table.nat-routetable.id
-}
-resource "aws_route_table_association" "alb-b" {
-  subnet_id = aws_subnet.alb-second.id
-  route_table_id = aws_route_table.nat-routetable.id
-}
 resource "aws_eip" "publicip" {
   depends_on                = [data.aws_internet_gateway.default]
 }
-######
-resource "aws_route_table_association" "a" {
-  count = length(local.public_subnet_ids)
-  subnet_id      = local.public_subnet_ids[count.index]
-  route_table_id = aws_route_table.webapp-routetable.id
-}
+## END ##
+#END#
 
+# Creating Security Group #
 resource "aws_security_group" "rds-to-asg" {
   name        = "rds-to-asg"
   vpc_id      = local.vpc_id
@@ -248,6 +260,10 @@ resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
   description                  = "Allow outbound DB traffic to RDS on port 3306"
 
 }
+# END #
+
+
+# Creating LOAD BALANCR #
 module "alb" {
 
   source             = "./ALB"
@@ -306,6 +322,22 @@ module "alb" {
         target_group_key = "asg_group"
       }
     }
+        tcp3000 = {
+      port     = 3000
+      protocol = "HTTP"
+      forward = {
+        target_group_key = "asg_group"
+      }
+    }
+        tcp8000 = {
+      port     = 8000
+      protocol = "HTTP"
+      forward = {
+        target_group_key = "asg_group"
+      }
+    }
+
   }
 
 }
+# END
