@@ -64,7 +64,6 @@ data "aws_internet_gateway" "default" {
 data "aws_instances" "instanceASG" {
   instance_tags = {
   Name = "ASG-instance" }
-  depends_on = [null_resource.wait]
   
 }
 
@@ -127,24 +126,16 @@ module "autoscaling" {
     Name = "ASG-instance"
   }
   key_name = local.publickeyinstance
-
+ ## Parssing the private ip of the instance into inventory file of ansible ##
+  user_data = <<-EOF
+              #!/bin/bash
+              ip=$(hostname -I | awk '{print $1}')
+              sed -i "s/TOBEREMPLACED/${ip}/g" ../automation_ansible/instance-asg
+            EOF
 }
 # END #
 ## Parssing the private ip of the instance into inventory file of ansible ##
-resource "null_resource" "wait" {
-  provisioner "local-exec" {
-    command = "sleep 40 " 
-    ## The sleep 30 is used to wait for the instance to boot and receive a private IP
-  }
-  depends_on = [module.autoscaling]
-}
-resource "null_resource" "this" {
-  provisioner "local-exec" {
-    working_dir = "../automation_ansible"
-    command = " sed -i \"s/TOBEREMPLACED/${data.aws_instances.instanceASG.private_ips[0]}\" ./instance-asg" ## The sleep 30 is used to wait for the instance to boot and receive a private IP
-  }
-  depends_on = [data.aws_instances.instanceASG]
-}
+
 
 
 ## Génerating Keys (Private/Public) that will be used later on ansible for configuration ##
