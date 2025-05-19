@@ -133,6 +133,7 @@ module "autoscaling" {
  sed -i "s/TOBEREMPLACED/$ip/g" ../automation_ansible/instance-asg
  EOF
 )
+}
 # END #
 ## Parssing the private ip of the instance into inventory file of ansible ##
 
