@@ -78,7 +78,6 @@ data "aws_subnet" "subnet-lambda" {
 }
 
 # END #
-
 # Auto Scaling Group Module #
 module "autoscaling" {
   source           = "./ASG"
