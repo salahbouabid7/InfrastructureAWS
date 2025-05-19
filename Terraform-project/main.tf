@@ -69,6 +69,13 @@ data "aws_instances" "instanceASG" {
 data "aws_db_instance" "database" {
   db_instance_identifier = "databaseaws"
 }
+data "aws_subnet" "subnet-lambda" {
+  vpc_id = local.vpc_id
+  filter {
+    name = "Tag:Name"
+    value = "LambdaSub"
+  }
+}
 
 # END #
 
@@ -117,7 +124,7 @@ module "autoscaling" {
       comparison_operator = "LessThanThreshold"
     }
   ]
-  security_groups  = [aws_security_group.asg-to-rds.id]
+  security_groups  = [aws_security_group.asg-to-rds.id, aws_security_group.asg-cb.id]
   default_cooldown = 600
   traffic_source_attachments = {
     asg-alb = {
@@ -344,6 +351,35 @@ resource "aws_vpc_security_group_egress_rule" "CBasg_egress" {
   description                  = "Allow outbound SSH from CodeBuild to ASG instances"
 }
 ## END ##
+### Updating the coldebuild with appropriate vpc ###
+resource "aws_codebuild_project" "project-using-github-app" {
+  name         = "Deploy-Terraform"
+  description  = "Instancuat the aws infra , Clone Web application from github and running it"
+  service_role = "arn:aws:iam::767397735671:role/service-role/codebuild-Deploy-Terraform-service-role"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/standard:7.0"
+    type                        = "LINUX_CONTAINER"
+
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/salahbouabid7/InfrastructureAWS"
+    git_clone_depth = 1
+  }
+  vpc_config {
+    vpc_id = local.vpc_id
+    subnets = [data.subnet-lambda.id]
+    security_group_ids = [aws_security_group.cb-asg.id]
+  }
+}
+###
 
 
 
