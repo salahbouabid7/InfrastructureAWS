@@ -133,8 +133,8 @@ module "autoscaling" {
 resource "null_resource" "this" {
   provisioner "local-exec" {
     working_dir = "../automation_ansible"
-    command     = "sed -i \"s/TOBEREMPLACED/${join("", [data.aws_instances.instanceASG.private_ips[0]])}\" ./instance-asg"
-  }
+    command = "sleep 30 && sed -i \"s/TOBEREMPLACED/${data.aws_instances.instanceASG.private_ips[0]}\" ./instance-asg" ## The sleep 30 is used to wait for the instance to boot and receive a private IP
+
   depends_on = [data.aws_instances.instanceASG]
 }
 
