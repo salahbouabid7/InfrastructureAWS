@@ -18,6 +18,9 @@ phases:
     - echo "Terraform plan in the process"
     - terraform plan
     - echo "Apply Terraform script in the process"
+    - terraform import aws_codebuild_project.project-using-github-app Deploy-Terraform
+
+    - 
     - terraform apply -auto-approve
   post_build:
     commands:
