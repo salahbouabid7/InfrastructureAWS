@@ -127,11 +127,11 @@ module "autoscaling" {
   }
   key_name = local.publickeyinstance
  ## Parssing the private ip of the instance into inventory file of ansible ##
-  user_data = <<-EOF
-              #!/bin/bash
-              ip=$(hostname -I | awk '{print $1}')
-              sed -i "s/TOBEREMPLACED/\\${ip}/g"  ../automation_ansible/instance-asg
-            EOF
+  user_data = <<EOF
+  #!/bin/bash
+  ip=\$(hostname -I | awk '{print \$1}')
+  sed -i "s/TOBEREMPLACED/\$ip/g" /home/ubuntu/automation_ansible/instance-asg
+  EOF
 }
 # END #
 ## Parssing the private ip of the instance into inventory file of ansible ##
