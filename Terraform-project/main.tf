@@ -72,8 +72,8 @@ data "aws_db_instance" "database" {
 data "aws_subnet" "subnet-lambda" {
   vpc_id = local.vpc_id
   filter {
-    name = "Tag:Name"
-    value = "LambdaSub"
+    name = "tag:Name"
+    values = ["LambdaSub"]
   }
 }
 
