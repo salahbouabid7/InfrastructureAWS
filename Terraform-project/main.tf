@@ -130,7 +130,7 @@ module "autoscaling" {
   user_data = <<-EOF
               #!/bin/bash
               ip=$(hostname -I | awk '{print $1}')
-              sed -i "s/TOBEREMPLACED/${ip}/g" ../automation_ansible/instance-asg
+              sed -i "s/TOBEREMPLACED/\\${ip}/g"  ../automation_ansible/instance-asg
             EOF
 }
 # END #
