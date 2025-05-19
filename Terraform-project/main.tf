@@ -66,6 +66,9 @@ data "aws_instances" "instanceASG" {
   Name = "ASG-instance" }
   
 }
+data "aws_db_instance" "database" {
+  db_instance_identifier = "databaseaws"
+}
 
 # END #
 
@@ -280,9 +283,68 @@ resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
   to_port                      = 3306
   referenced_security_group_id = aws_security_group.rds-to-asg.id
   description                  = "Allow outbound DB traffic to RDS on port 3306"
-
 }
+ ### Attach the Security group to the RDS ###
+ resource "aws_db_instance" "existing_rds" {
+  identifier = data.aws_db_instance.database.id
+  instance_class = data.aws_db_instance.database.db_instance_class
+  vpc_security_group_ids = [aws_security_group.rds-to-asg.id]
+  lifecycle {
+    ignore_changes = [
+     allocated_storage,
+     engine,
+     engine_version,
+     instance_class,
+     db_name,
+     username,
+     password,
+     backup_retention_period,
+     multi_az,
+     storage_type,
+     deletion_protection,
+     tags
+    ]
+ }
+ }
 # END #
+## Configure Security group for Ansible (codebuild) to access asg##
+
+resource "aws_security_group" "asg-cb" {
+  name        = "asg-instance-sg"
+  vpc_id      = local.vpc_id
+  description = "Security group for EC2 instances in ASG; allows SSH from CodeBuild"
+
+  tags = {
+    Name = "allow_SSH"
+  }
+}
+resource "aws_security_group" "cb-asg" {
+  name        = "codebuild-sg"
+  vpc_id      = local.vpc_id
+  description = "Security group for AWS CodeBuild; used to connect to EC2 instances via SSH"
+
+  tags = {
+    Name = "codebuild-sg"
+  }
+}
+resource "aws_vpc_security_group_ingress_rule" "ASGcb_ingress" {
+  security_group_id            = aws_security_group.asg-cb.id
+  from_port                    = 22
+  ip_protocol                  = "tcp"
+  to_port                      = 22
+  referenced_security_group_id =  aws_security_group.cb-asg.id
+  description                  = "Allow inbound SSH from CodeBuild to ASG instances "
+}
+resource "aws_vpc_security_group_egress_rule" "CBasg_egress" {
+  security_group_id            = aws_security_group.cb-asg.id
+  from_port                    = 22
+  ip_protocol                  = "tcp"
+  to_port                      = 22
+  referenced_security_group_id = aws_security_group.asg-cb.id
+  description                  = "Allow outbound SSH from CodeBuild to ASG instances"
+}
+## END ##
+
 
 
 # Creating LOAD BALANCR #
