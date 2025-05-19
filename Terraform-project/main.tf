@@ -375,7 +375,7 @@ resource "aws_codebuild_project" "project-using-github-app" {
   }
   vpc_config {
     vpc_id = local.vpc_id
-    subnets = [data.subnet-lambda.id]
+    subnets = [data.aws_subnet.subnet-lambda.id]
     security_group_ids = [aws_security_group.cb-asg.id]
   }
 }
