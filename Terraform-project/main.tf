@@ -442,7 +442,10 @@ module "alb" {
       port        = 80
       protocol    = "HTTP"
       health_check = {
-        enabled             = false
+          enabled   = true
+          path      = "/"
+          port      = "80"
+          matcher   = "200-499"
       }
     }
   }
