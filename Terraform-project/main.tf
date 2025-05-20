@@ -300,7 +300,7 @@ resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
  resource "aws_db_instance" "existing_rds" {
   identifier = data.aws_db_instance.database.id
   instance_class = data.aws_db_instance.database.db_instance_class
-  vpc_security_group_ids = [aws_security_group.rds-to-asg.id, data.aws_security_group.azureconnectAWSDatabse.id, data.aws_security_group.default]
+  vpc_security_group_ids = [aws_security_group.rds-to-asg.id, data.aws_security_group.azureconnectAWSDatabse.id, data.aws_security_group.default.id]
   lifecycle {
     ignore_changes = [
      allocated_storage,
