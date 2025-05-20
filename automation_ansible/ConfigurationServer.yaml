@@ -1,5 +1,5 @@
 ---
-hosts:
+hosts: Web-server
 become: true
 gather_facts: false
 tasks:
@@ -21,6 +21,12 @@ tasks:
     clone: true
     repo: https://github.com/salahbouabid7/PFEWebAppli.git
     dest: /webappli
+
+- name: Copy alb.dns into Docker project folder
+  copy:
+    src: /home/ubuntu/alb.dns
+    dest: /webappli/crate/code/web/alb.dns
+    remote_src: yes
 
 - name: Start the Docker compose that will start both backend and frontend
   community.docker.docker_compose_v2_run:

@@ -142,11 +142,11 @@ module "autoscaling" {
   }
   key_name = local.publickeyinstance
  ## Parssing the private ip of the instance into inventory file of ansible ##
- user_data = base64encode(<<EOF
- #!/bin/bash
- ip=$(hostname -I | awk '{print $1}')
- sed -i "s/TOBEREMPLACED/$ip/g" ../automation_ansible/instance-asg
- EOF
+  user_data = base64encode(<<-EOF
+  #!/bin/bash
+  echo ${module.alb.dns_name}" > ~/alb.dns
+  chown ubuntu:ubuntu ~/alb.dns
+EOF
 )
 }
 # END #
@@ -385,7 +385,7 @@ resource "aws_codebuild_project" "project-using-github-app" {
     security_group_ids = [aws_security_group.cb-asg.id]
   }
   lifecycle {
-    create_before_destroy = true
+    prevent_destroy = true
   }
 }
 ###
