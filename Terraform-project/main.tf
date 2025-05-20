@@ -55,6 +55,12 @@ data "aws_vpc" "AWSvpc" {
     values = [local.vpc_id]
   }
 }
+data "aws_security_group" "azureconnectAWSDatabse" {
+  id = "sg-01394212b4d0dcbac"
+}
+data "aws_security_group" "default"{
+  id = "sg-0ab01d3579a8d1559"
+}
 data "aws_internet_gateway" "default" {
   filter {
     name   = "tag:Name"
@@ -294,7 +300,7 @@ resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
  resource "aws_db_instance" "existing_rds" {
   identifier = data.aws_db_instance.database.id
   instance_class = data.aws_db_instance.database.db_instance_class
-  vpc_security_group_ids = [aws_security_group.rds-to-asg.id]
+  vpc_security_group_ids = [aws_security_group.rds-to-asg.id, data.aws_security_group.azureconnectAWSDatabse.id, data.aws_internet_gateway.default.id]
   lifecycle {
     ignore_changes = [
      allocated_storage,
