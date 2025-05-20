@@ -378,6 +378,9 @@ resource "aws_codebuild_project" "project-using-github-app" {
     subnets = [data.aws_subnet.subnet-lambda.id]
     security_group_ids = [aws_security_group.cb-asg.id]
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 ###
 
