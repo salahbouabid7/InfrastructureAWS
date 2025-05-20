@@ -148,6 +148,7 @@ module "autoscaling" {
   chown ubuntu:ubuntu /home/ubuntu/alb.dns
 EOF
 )
+  
 }
 # END #
 ## Parssing the private ip of the instance into inventory file of ansible ##
@@ -440,6 +441,9 @@ module "alb" {
       target_type = "instance"
       port        = 80
       protocol    = "HTTP"
+      health_check = {
+        enabled             = false
+      }
     }
   }
 
