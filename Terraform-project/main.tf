@@ -308,6 +308,7 @@ resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
      multi_az,
      storage_type,
      deletion_protection,
+     storage_encrypted,
      tags
     ]
  }
