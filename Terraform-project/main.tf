@@ -144,8 +144,8 @@ module "autoscaling" {
  ## Parssing the private ip of the instance into inventory file of ansible ##
   user_data = base64encode(<<-EOF
   #!/bin/bash
-  echo ${module.alb.dns_name}" > ~/alb.dns
-  chown ubuntu:ubuntu ~/alb.dns
+  echo "${module.alb.dns_name}" > /home/ubuntu/alb.dns
+  chown ubuntu:ubuntu /home/ubuntu/alb.dns
 EOF
 )
 }
@@ -300,7 +300,7 @@ resource "aws_vpc_security_group_egress_rule" "asg-to-rds" {
  resource "aws_db_instance" "existing_rds" {
   identifier = data.aws_db_instance.database.id
   instance_class = data.aws_db_instance.database.db_instance_class
-  vpc_security_group_ids = [aws_security_group.rds-to-asg.id, data.aws_security_group.azureconnectAWSDatabse.id, data.aws_internet_gateway.default.id]
+  vpc_security_group_ids = [aws_security_group.rds-to-asg.id, data.aws_security_group.azureconnectAWSDatabse.id, data.aws_security_group.default]
   lifecycle {
     ignore_changes = [
      allocated_storage,
