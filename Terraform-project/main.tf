@@ -158,7 +158,7 @@ module "autoscaling" {
 
   # Start dummy server on port 80 as root
   cd /home/ubuntu
-  nohup python3 -m http.server 80 > /var/log/server.log 2>&1 &
+  sudo bash -c 'nohup python3 -m http.server 80 > /var/log/server.log 2>&1 &'
 EOF
 )
   
@@ -459,7 +459,7 @@ module "alb" {
           path      = "/"
           port      = "80"
           matcher   = "200-499"
-          interval            = 300             # ALB checks only every 5 min
+          interval            = 30             # ALB checks only every 5 min
           timeout             = 10              # Gives  app 10s to respond
           healthy_threshold   = 2               
           unhealthy_threshold = 10 
@@ -475,7 +475,7 @@ module "alb" {
           path      = "/"
           port      = "80"
           matcher   = "200-499"
-          interval            = 300             # ALB checks only every 5 min
+          interval            = 30             # ALB checks only every 5 min
           timeout             = 10              # Gives  app 10s to respond
           healthy_threshold   = 2               
           unhealthy_threshold = 10 
@@ -491,7 +491,7 @@ module "alb" {
           path      = "/"
           port      = "80"
           matcher   = "200-499"
-          interval            = 300             # ALB checks only every 5 min
+          interval            = 30              # ALB checks only every 5 min
           timeout             = 10              # Gives  app 10s to respond
           healthy_threshold   = 2               
           unhealthy_threshold = 10 
