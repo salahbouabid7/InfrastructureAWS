@@ -354,6 +354,24 @@ resource "aws_security_group" "cb-asg" {
     Name = "codebuild-sg"
   }
 }
+  resource "aws_security_group" "alb-asg" {
+  name        = "alb-sg"
+  vpc_id      = local.vpc_id
+  description = "Allow ALB health checks"
+
+  tags = {
+    Name = "alb-asg"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "albasg_ingress" {
+  security_group_id            = aws_security_group.alb-asg.id
+  from_port                    = 80
+  ip_protocol                  = "tcp"
+  to_port                      = 80
+  cidr_ipv4                   = var.subnet_definitions["public-subnet-alb"].cidr_block
+  description                  = "Allow inbound SSH from CodeBuild to ASG instances "
+}
 resource "aws_vpc_security_group_ingress_rule" "ASGcb_ingress" {
   security_group_id            = aws_security_group.asg-cb.id
   from_port                    = 22
