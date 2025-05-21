@@ -131,11 +131,20 @@ module "autoscaling" {
   ]
   security_groups  = [aws_security_group.asg-to-rds.id, aws_security_group.asg-cb.id]
   default_cooldown = 600
-  traffic_source_attachments = {
-    asg-alb = {
-      traffic_source_identifier = module.alb.target_groups["asg_group"].arn
-      type                      = "elbv2"
-    }
+ traffic_source_attachments = {
+  asg-alb-80 = {
+    traffic_source_identifier = module.alb.target_groups["asg_group80"].arn
+    type                      = "elbv2"
+  }
+  asg-alb-3000 = {
+    traffic_source_identifier = module.alb.target_groups["asg_group3000"].arn
+    type                      = "elbv2"
+  }
+  asg-alb-8000 = {
+    traffic_source_identifier = module.alb.target_groups["asg_group8000"].arn
+    type                      = "elbv2"
+  }
+
   }
   launch_template_tags = {
     Name = "ASG-instance"
@@ -146,6 +155,10 @@ module "autoscaling" {
   #!/bin/bash
   echo "${module.alb.dns_name}" > /home/ubuntu/alb.dns
   chown ubuntu:ubuntu /home/ubuntu/alb.dns
+
+  # Start dummy server on port 80 as root
+  cd /home/ubuntu
+  nohup python3 -m http.server 80 > /var/log/server.log 2>&1 &
 EOF
 )
   
@@ -436,7 +449,7 @@ module "alb" {
   }
 
   target_groups = {
-    asg_group = {
+    asg_group80 = {
       name_prefix = "asg-tg"
       target_type = "instance"
       port        = 80
@@ -446,6 +459,42 @@ module "alb" {
           path      = "/"
           port      = "80"
           matcher   = "200-499"
+          interval            = 300             # ALB checks only every 5 min
+          timeout             = 10              # Gives  app 10s to respond
+          healthy_threshold   = 2               
+          unhealthy_threshold = 10 
+      }
+    }
+    asg_group3000 = {
+      name_prefix = "asg-tg"
+      target_type = "instance"
+      port        = 3000
+      protocol    = "HTTP"
+      health_check = {
+          enabled   = true
+          path      = "/"
+          port      = "80"
+          matcher   = "200-499"
+          interval            = 300             # ALB checks only every 5 min
+          timeout             = 10              # Gives  app 10s to respond
+          healthy_threshold   = 2               
+          unhealthy_threshold = 10 
+      }
+    }
+  asg_group8000 = {
+      name_prefix = "asg-tg"
+      target_type = "instance"
+      port        = 8000
+      protocol    = "HTTP"
+      health_check = {
+          enabled   = true
+          path      = "/"
+          port      = "80"
+          matcher   = "200-499"
+          interval            = 300             # ALB checks only every 5 min
+          timeout             = 10              # Gives  app 10s to respond
+          healthy_threshold   = 2               
+          unhealthy_threshold = 10 
       }
     }
   }
@@ -454,22 +503,24 @@ module "alb" {
     tcp80 = {
       port     = 80
       protocol = "HTTP"
-      forward = {
-        target_group_key = "asg_group"
+      redirect = {
+        port        = "3000"
+        protocol    = "HTTP"
+        status_code = "HTTP_301"
       }
     }
     tcp3000 = {
       port     = 3000
       protocol = "HTTP"
       forward = {
-        target_group_key = "asg_group"
-      }
+        target_group_key = "asg_group3000"
+        }
     }
     tcp8000 = {
       port     = 8000
       protocol = "HTTP"
       forward = {
-        target_group_key = "asg_group"
+        target_group_key = "asg_group8000"
       }
     }
 
