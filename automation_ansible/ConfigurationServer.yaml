@@ -4,31 +4,31 @@
   gather_facts: false
 
   tasks:
-    - name: Update the repository
-      apt:
-        update_cache: true
+  - name: Update the repository
+    apt:
+      update_cache: true
 
-    - name: Install Docker, Docker Compose, and Git
-      apt:
-        name:
-          - docker.io
-          - docker-compose
-          - git
-        state: latest
+  - name: Install Docker, Docker Compose, and Git
+    apt:
+      name:
+      - docker.io
+      - docker-compose
+      - git
+      state: latest
 
-    - name: Clone the web application build
-      git:
-        repo: https://github.com/salahbouabid7/PFEWebAppli.git
-        dest: /webappli
+  - name: Clone the web application build
+    git:
+      repo: https://github.com/salahbouabid7/PFEWebAppli.git
+      dest: /webappli
 
-    - name: Copy alb.dns into Docker project folder
-      copy:
-        src: /home/ubuntu/alb.dns
-        dest: /webappli/crate/code/web/alb.dns
-        remote_src: yes
+  - name: Copy alb.dns into Docker project folder
+    copy:
+      src: /home/ubuntu/alb.dns
+      dest: /webappli/crate/code/web/alb.dns
+      remote_src: yes
 
-    - name: Start the Docker Compose project
-      community.docker.docker_compose_v2_run:
-        name: webappli-crate
-        build: true
-        project_src: /webappli
+  - name: Start the Docker Compose project
+    community.docker.docker_compose:
+      name: webappli-crate
+      build: true
+      project_src: /webappli

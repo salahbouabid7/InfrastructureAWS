@@ -388,6 +388,16 @@ resource "aws_vpc_security_group_egress_rule" "CBasg_egress" {
   referenced_security_group_id = aws_security_group.asg-cb.id
   description                  = "Allow outbound SSH from CodeBuild to ASG instances"
 }
+
+# Allow outbound HTTPS to GitHub and package registries (port 443)
+resource "aws_vpc_security_group_egress_rule" "CBasg_egress_https" {
+  security_group_id = aws_security_group.cb-asg.id
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+  description       = "Allow HTTPS traffic from CodeBuild to GitHub and public internet"
+}
 ## END ##
 ### Updating the coldebuild with appropriate vpc ###
 resource "aws_codebuild_project" "project-using-github-app" {
@@ -413,7 +423,7 @@ resource "aws_codebuild_project" "project-using-github-app" {
   }
   vpc_config {
     vpc_id = local.vpc_id
-    subnets = [data.aws_subnet.subnet-lambda.id]
+    subnets = [aws_subnet.subnets["private-subnet-web"].id]
     security_group_ids = [aws_security_group.cb-asg.id]
   }
   lifecycle {
