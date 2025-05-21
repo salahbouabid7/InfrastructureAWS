@@ -1,35 +1,34 @@
 ---
-hosts: Web-server
-become: true
-gather_facts: false
-tasks:
+- hosts: Web-server
+  become: true
+  gather_facts: false
 
-- name: Update the repository
-  apt:
-    update: true
+  tasks:
+    - name: Update the repository
+      apt:
+        update_cache: true
 
-- name: Install Dcoker and Docker-Compose
-  apt:
-    name:
-    - docker.io
-    - Docker-Compose
-    - git
-    state: latest
+    - name: Install Docker, Docker Compose, and Git
+      apt:
+        name:
+          - docker.io
+          - docker-compose
+          - git
+        state: latest
 
-- name: clone the web application build
-  git:
-    clone: true
-    repo: https://github.com/salahbouabid7/PFEWebAppli.git
-    dest: /webappli
+    - name: Clone the web application build
+      git:
+        repo: https://github.com/salahbouabid7/PFEWebAppli.git
+        dest: /webappli
 
-- name: Copy alb.dns into Docker project folder
-  copy:
-    src: /home/ubuntu/alb.dns
-    dest: /webappli/crate/code/web/alb.dns
-    remote_src: yes
+    - name: Copy alb.dns into Docker project folder
+      copy:
+        src: /home/ubuntu/alb.dns
+        dest: /webappli/crate/code/web/alb.dns
+        remote_src: yes
 
-- name: Start the Docker compose that will start both backend and frontend
-  community.docker.docker_compose_v2_run:
-    name: webappli-crate
-    build: yes
-    project_src: /webappli/
+    - name: Start the Docker Compose project
+      community.docker.docker_compose_v2_run:
+        name: webappli-crate
+        build: true
+        project_src: /webappli
