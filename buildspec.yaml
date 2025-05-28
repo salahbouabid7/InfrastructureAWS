@@ -18,10 +18,15 @@ phases:
     - echo "Terraform plan in the process"
     - terraform plan
     - echo "Apply Terraform script in the process"
-    - terraform import aws_codebuild_project.project-using-github-app Deploy-Terraform
-
-    - 
     - terraform apply -auto-approve
   post_build:
     commands:
     - cd automation_ansible
+    - echo "switching to configuration of the instances"
+
+    - sudo chmod +x retrieve-ip.sh
+    - ./retrieve-ip.sh
+
+    - echo "[*] Installing Docker Ansible collection"
+    - ansible-galaxy collection install community.docker
+    - ansible-playbook ConfigurationServer.yaml -i instance-asg
