@@ -82,6 +82,9 @@ data "aws_subnet" "subnet-lambda" {
     values = ["LambdaSub"]
   }
 }
+data "aws_route53_zone" "primary" {
+  name = "bouabid-pfe.website"
+}
 
 # END #
 # Auto Scaling Group Module #
@@ -553,7 +556,20 @@ module "alb" {
     }
 
   }
+}
 
+# update the route 53 route
+resource "aws_route53_record" "www" {
+  zone_id = data.aws_route53_zone.primary.zone_id
+  name    = "www.bouabid-pfe.com"
+  type    = "CNAME"
+  
+  failover_routing_policy  {
+    type = "SECONDARY"
+  }
+  set_identifier = "alb-second"
+  ttl = 60
+  records = [module.alb.dns_name]
 }
 #
 # END #
