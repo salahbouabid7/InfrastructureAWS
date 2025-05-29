@@ -10,13 +10,20 @@ terraform {
       version = "4.1.0"
     }
   }
-}
+
+  backend "s3"{
+    bucket = "store-tfstate-codebuild" 
+    key    = "codebuild.tfstate"
+    region = "eu-north-1"    
+  }
+    
+  }
+
 
 provider "aws" {
   region     = "eu-north-1"
-  access_key = "AKIA3FLDYFT3ZD36P3VP"
-  secret_key = "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"
 }
+
 
 locals {
   vpc_id = "vpc-09b443006b8470e8b"
@@ -400,6 +407,15 @@ resource "aws_vpc_security_group_egress_rule" "CBasg_egress_https" {
   ip_protocol       = "tcp"
   cidr_ipv4         = "0.0.0.0/0"
   description       = "Allow HTTPS traffic from CodeBuild to GitHub and public internet"
+}
+# Allow outbound HTTP to GitHub and package registries (port 80)
+resource "aws_vpc_security_group_egress_rule" "CBasg_egress_http" {
+  security_group_id = aws_security_group.cb-asg.id
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+  description       = "Allow HTTP traffic from CodeBuild to GitHub and public internet"
 }
 ## END ##
 ### Updating the coldebuild with appropriate vpc ###
