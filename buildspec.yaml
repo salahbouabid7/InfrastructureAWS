@@ -21,7 +21,7 @@ phases:
     - terraform apply -auto-approve
   post_build:
     commands:
-    - cd automation_ansible
+    - cd ../automation_ansible
     - echo "switching to configuration of the instances"
 
     - sudo chmod +x retrieve-ip.sh
