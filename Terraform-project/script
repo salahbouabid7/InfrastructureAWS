@@ -1,0 +1,6 @@
+#!/bin/bash
+echo "starting the destroy"
+terraform state rm aws_codebuild_project.project-using-github-app
+terraform state rm aws_db_instance.existing_rds
+terraform destroy -auto-approve
+
