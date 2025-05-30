@@ -20,4 +20,7 @@ phases:
 
   post_build:
     commands:
-    - aws codebuild start-build \ --project-name Deploy-Terraform \ --buildspec-override buildspec-2.yaml \ --environment-variables-override name=ANSIBLE_KEY,value="$(cat ../automation_ansible/private_key.pem)",type=PLAINTEXT
+    - aws codebuild start-build \
+      --project-name Deploy-Terraform \ 
+      --buildspec-override buildspec-2.yaml \ 
+      --environment-variables-override name=ANSIBLE_KEY,value="$(cat ../automation_ansible/private_key.pem)",type=PLAINTEXT
