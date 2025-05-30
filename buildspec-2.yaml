@@ -1,0 +1,15 @@
+version: 0.2
+phases:
+  build:
+    commands:
+    - cd automation_ansible
+    - echo "switching to configuration of the instances"
+
+    - sudo chmod +x retrieve-ip.sh
+    - ./retrieve-ip.sh
+    - echo "[*] Installing Docker Ansible collection"
+    - ansible-galaxy collection install community.docker
+    - echo "$ANSIBLE_KEY" > private_key.pem
+    - cat ./private_key.pem
+    - chmod 600 private_key.pem
+    - ansible-playbook -vvv ConfigurationServer.yaml -i instance-asg
