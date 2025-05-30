@@ -2,7 +2,7 @@
 
 retrieve_ip() {
     aws ec2 describe-instances \
-        --filters "Name=tag:Name,Values=ASG-instance" \
+        --filters "Name=tag:Name,Values=asg-instance" \
                   "Name=instance-state-name,Values=running" \
         --query "Reservations[].Instances[].PrivateIpAddress" \
         --output text
