@@ -136,7 +136,7 @@ module "autoscaling" {
       comparison_operator = "LessThanThreshold"
     }
   ]
-  security_groups  = [aws_security_group.asg-to-rds.id, aws_security_group.asg-cb.id, aws_security_group.alb-asg.id, aws_security_group.asg-instance-sg.id]
+  security_groups  = [aws_security_group.asg-to-rds.id, aws_security_group.asg-cb.id, aws_security_group.alb-asg.id, aws_security_group.asg-instance-internet.id]
   default_cooldown = 600
  traffic_source_attachments = {
   asg-alb-80 = {
@@ -298,19 +298,19 @@ resource "aws_security_group" "asg-to-rds" {
     Name = "allow_tls"
   }
 }
-resource "aws_security_group" "asg-instance-sg" {
-  name        = "asg-instance-sg"
+resource "aws_security_group" "asg-instance-internet" {
+  name        = "asg-instance-internet"
   description = "Security group for EC2 instances in ASG with internet access"
   vpc_id      = local.vpc_id
 
   tags = {
-    Name = "asg-instance-sg"
+    Name = "asg-instance-internet"
   }
 }
 
 #  Allow all **outbound** traffic (internet access via NAT)
 resource "aws_vpc_security_group_egress_rule" "asg_allow_all_outbound" {
-  security_group_id = aws_security_group.asg-instance-sg.id
+  security_group_id = aws_security_group.asg-instance-internet.id
   from_port         = 0
   to_port           = 0
   ip_protocol       = "-1"
