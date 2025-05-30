@@ -26,5 +26,5 @@ ip=$(retrieve_ip)
 done
 
 echo "Private IP found: $ip"
-sed -i "s/TOBEREMPLACED/${ip}/g" ./automation_ansible/instance-asg
+sed -i "s/TOBEREMPLACED/${ip}/g" ./instance-asg
 
