@@ -15,8 +15,6 @@ phases:
     - terraform init
   build:
     commands:
-    - echo "Terraform plan in the process"
-    - terraform plan
     - echo "Apply Terraform script in the process"
     - terraform apply -auto-approve
   post_build:
