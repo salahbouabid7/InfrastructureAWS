@@ -26,3 +26,4 @@ done
 echo "Private IP found: $ip"
 
 sed -i "s/TOBEREMPLACED/${ip}/g" ./instance-asg
+cat ./instance-asg
