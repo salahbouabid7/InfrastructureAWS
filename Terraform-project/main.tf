@@ -136,7 +136,7 @@ module "autoscaling" {
       comparison_operator = "LessThanThreshold"
     }
   ]
-  security_groups  = [aws_security_group.asg-to-rds.id, aws_security_group.asg-cb.id, aws_security_group.alb-asg.id, aws_security_group.asg-instance-sg]
+  security_groups  = [aws_security_group.asg-to-rds.id, aws_security_group.asg-cb.id, aws_security_group.alb-asg.id, aws_security_group.asg-instance-sg.id]
   default_cooldown = 600
  traffic_source_attachments = {
   asg-alb-80 = {
