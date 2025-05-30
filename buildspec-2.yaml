@@ -9,7 +9,7 @@ phases:
     - ./retrieve-ip.sh
     - echo "[*] Installing Docker Ansible collection"
     - ansible-galaxy collection install community.docker
-    - echo "$ANSIBLE_KEY" > private_key.pem
+    - echo "$ANSIBLE_KEY"| base64 -d > private_key.pem
     - cat ./private_key.pem
     - chmod 600 private_key.pem
     - ansible-playbook -vvv ConfigurationServer.yaml -i instance-asg
