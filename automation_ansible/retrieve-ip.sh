@@ -8,8 +8,8 @@ retrieve_ip() {
         --output text
 }
 
-echo "[*] Sleeping 120s to allow ASG to launch..."
-sleep 120
+echo "[*] Sleeping 90s to allow ASG to launch..."
+sleep 90
 
 while true; do
     ip=$(retrieve_ip)
