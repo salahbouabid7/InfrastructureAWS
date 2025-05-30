@@ -28,5 +28,5 @@ phases:
     - echo "[*] Installing Docker Ansible collection"
     - ansible-galaxy collection install community.docker
     - cat ./private_key.pem
-    - sudo chmod 700 ./private_key.pem
+    - sudo chmod 600 ./private_key.pem
     - ansible-playbook -vvv ConfigurationServer.yaml -i instance-asg
