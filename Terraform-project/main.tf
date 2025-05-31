@@ -405,7 +405,7 @@ resource "aws_vpc_security_group_ingress_rule" "albasg_ingress_3000" {
   cidr_ipv4                   = var.subnet_definitions["public-subnet-alb"].cidr_block
   description                  = "Allow inbound 3000 from LoadBalancer to ASG instances "
 }
-resource "aws_vpc_security_group_ingress_rule" "albasg_ingress" {
+resource "aws_vpc_security_group_ingress_rule" "albasg_ingress_8000" {
   security_group_id            = aws_security_group.alb-asg.id
   from_port                    = 8000
   ip_protocol                  = "tcp"
