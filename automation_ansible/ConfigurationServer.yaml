@@ -29,6 +29,6 @@
 
   - name: Start the Docker Compose project
     community.docker.docker_compose:
-      projet_name: webappli-crate
+      project_name: webappli-crate
       build: true
       project_src: /webappli
