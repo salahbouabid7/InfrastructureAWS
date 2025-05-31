@@ -592,15 +592,18 @@ module "alb" {
 # update the route 53 route
 resource "aws_route53_record" "www" {
   zone_id = data.aws_route53_zone.primary.zone_id
-  name    = "www"
-  type    = "CNAME"
+  name    = ""
+  type    = "A"
   
   failover_routing_policy  {
     type = "SECONDARY"
   }
   set_identifier = "alb-second"
-  ttl = 60
-  records = [module.alb.dns_name]
+  alias {
+    name = module.alb.dns_name
+    zone_id = module.alb.zone_id
+    evaluate_target_health = false
+  }
 }
 #
 # END #
