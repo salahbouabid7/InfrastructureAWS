@@ -1,10 +1,14 @@
 version: 0.2
 phases:
+  install:
+    commands:
+    - sudo apt update
+    - sudo apt install -y software-properties-common && sudo add-apt-repository --yes --update ppa:ansible/ansible && sudo apt install -y ansible
+
   build:
     commands:
     - cd automation_ansible
     - echo "switching to configuration of the instances"
-
     - sudo chmod +x retrieve-ip.sh
     - ./retrieve-ip.sh
     - echo "[*] Installing Docker Ansible collection"
